@@ -383,7 +383,7 @@
 
     <div class="container">
         <header class="header">
-            <h1>Painel da Oficina</h1>
+            <h1>Painel da Peritagem</h1>
         </header>
 
         <div class="filters-section">
@@ -425,12 +425,8 @@
                         <th>CLIENTE</th>
                         <th>Previsão de Entrega Peç</th>
                         <th>Previsão de Entrega do Item</th>
-                        <th>Usinagem</th>
-                        <th>Brunimento</th>
-                        <th>Cromagem</th>
-                        <th>Montagem</th>
-                        <th>Teste</th>
-                        <th>Pintura</th>
+                        <th>Peritagem</th>
+                        <th>Desmontagem</th>
                         <th>Responsável</th>
                     </tr>
                 </thead>
@@ -510,7 +506,7 @@
             showLoading();
 
             const query = `
-                     SELECT DISTINCT
+             SELECT DISTINCT
                     S.ID,
                     OS.NUOS,
                     PAR.NOMEPARC,
@@ -535,7 +531,7 @@
                 LEFT JOIN TSIUSU U ON U.CODUSU = S.OPERADOR
                 LEFT JOIN TGFGRU GRU ON GRU.CODGRUPOPROD = OS.CODMACROGRP
                 WHERE OS.NUOS IS NOT NULL
-                AND PRO.AD_ETAPAOFICINA IN (300020000,300030000,300040000,300050000,300060000,300070000)
+                AND PRO.AD_ETAPAOFICINA IN (300080000,300010000)
                 AND OS.STATUS IN (4,7)
                 ORDER BY OS.NUOS, S.ID
             `;
@@ -566,12 +562,8 @@
 
         function transformData(rawData) {
             const etapaMapping = {
-                '300020000': 'Usinagem',
-                '300030000': 'Brunimento',
-                '300040000': 'Cromagem',
-                '300050000': 'Montagem',
-                '300060000': 'Teste',
-                '300070000': 'Pintura'
+                '300080000': 'Desmontagem',
+                '300010000': 'Peritagem',
             };
 
             const statusMapping = {
@@ -750,7 +742,7 @@
                         return false;
                     }
 
-                    const etapas = ['Usinagem', 'Brunimento', 'Cromagem', 'Montagem', 'Teste', 'Pintura'];
+                    const etapas = ['Peritagem', 'Desmontagem', 'Lavagem'];
                     const osStatuses = etapas.map(etapa => this.calculateStepStatus(os.servicos, etapa));
 
                     const statusMap = {
@@ -787,24 +779,16 @@
                     const row = document.createElement('tr');
                     row.dataset.osNumber = os.nrOS;
 
-                    const usinagemStatus = this.calculateStepStatus(os.servicos, 'Usinagem');
-                    const brunimentoStatus = this.calculateStepStatus(os.servicos, 'Brunimento');
-                    const cromagemStatus = this.calculateStepStatus(os.servicos, 'Cromagem');
-                    const montagemStatus = this.calculateStepStatus(os.servicos, 'Montagem');
-                    const testeStatus = this.calculateStepStatus(os.servicos, 'Teste');
-                    const pinturaStatus = this.calculateStepStatus(os.servicos, 'Pintura');
+                    const peritagemStatus = this.calculateStepStatus(os.servicos, 'Peritagem');
+                    const desmontagemStatus = this.calculateStepStatus(os.servicos, 'Desmontagem');
 
                     row.innerHTML = `
                         <td><strong>${os.nrOS}</strong></td>
                         <td>${os.cliente}</td>
                         <td>${os.previsaoEntrega}</td>
                         <td>${os.previsaoEntrega}</td>
-                        <td>${this.renderStatusCell(usinagemStatus)}</td>
-                        <td>${this.renderStatusCell(brunimentoStatus)}</td>
-                        <td>${this.renderStatusCell(cromagemStatus)}</td>
-                        <td>${this.renderStatusCell(montagemStatus)}</td>
-                        <td>${this.renderStatusCell(testeStatus)}</td>
-                        <td>${this.renderStatusCell(pinturaStatus)}</td>
+                        <td>${this.renderStatusCell(peritagemStatus)}</td>
+                        <td>${this.renderStatusCell(desmontagemStatus)}</td>
                         <td>${os.responsavel}</td>
                     `;
 
