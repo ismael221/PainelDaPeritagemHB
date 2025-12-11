@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Controle de OS</title>
+    <script src="https://cdn.jsdelivr.net/gh/wansleynery/SankhyaJX@main/jx.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --info-color: #3b82f6;
+            --background-color: #f8fafc;
+            --surface-color: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            background-color: var(--background-color);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .filters-section {
+            background: var(--surface-color);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .filter-group {
+            margin-bottom: 16px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .filter-group select {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgb(37 99 235 / 0.1);
+        }
+
+        .status-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 16px;
+        }
+
+        .status-filter {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-filter input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .status-filter label {
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .table-container {
+            background: var(--surface-color);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .os-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .os-table thead {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .os-table th {
+            padding: 16px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .os-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .os-table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .os-table tbody tr.selected {
+            background-color: #dbeafe;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .os-table td {
+            padding: 12px;
+            vertical-align: middle;
+            border-right: 1px solid #f1f5f9;
+        }
+
+        .os-table td:last-child {
+            border-right: none;
+        }
+
+        .status-cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.finalizado {
+            background-color: var(--success-color);
+        }
+
+        .status-dot.programado {
+            background-color: var(--warning-color);
+        }
+
+        .status-dot.aguardando {
+            background-color: white;
+            border: 2px solid var(--secondary-color);
+        }
+
+        .status-dot.nao-aplica {
+            background-color: var(--error-color);
+        }
+
+        .details-section {
+            background: var(--surface-color);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .details-section h3 {
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .details-section p {
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            font-style: italic;
+        }
+
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 16px;
+        }
+
+        .details-table thead {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .details-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .details-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .details-table td {
+            padding: 10px 8px;
+            vertical-align: middle;
+        }
+
+        .no-selection {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 40px !important;
+        }
+
+        .legend-section {
+            background: var(--surface-color);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+
+        .legend-section h4 {
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-item span:last-child {
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1200px) {
+            .os-table {
+                font-size: 12px;
+            }
+
+            .os-table th,
+            .os-table td {
+                padding: 8px 6px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                padding: 16px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .status-filters {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .legend-items {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .table-container {
+                overflow-x: auto;
+            }
+
+            .os-table {
+                min-width: 800px;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .details-table tbody tr {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <h1>Painel da Oficina</h1>
+        </header>
+
+        <div class="filters-section">
+            <div class="filter-group">
+                <label for="filtro-oficina">Filtro por Oficina:</label>
+                <select id="filtro-oficina">
+                    <option value="">Todas as Oficinas</option>
+                    <option value="oficina-1">Oficina de Cilindros</option>
+                    <option value="oficina-2">Oficina de Componentes</option>
+                    <option value="oficina-3">Oficina de Cilindros DF</option>
+                </select>
+            </div>
+
+            <div class="status-filters">
+                <div class="status-filter">
+                    <input type="checkbox" id="finalizado" checked>
+                    <label for="finalizado">Finalizado</label>
+                </div>
+                <div class="status-filter">
+                    <input type="checkbox" id="programado" checked>
+                    <label for="programado">Programado</label>
+                </div>
+                <div class="status-filter">
+                    <input type="checkbox" id="aguardando" checked>
+                    <label for="aguardando">Aguardando</label>
+                </div>
+                <div class="status-filter">
+                    <input type="checkbox" id="nao-aplica" checked>
+                    <label for="nao-aplica">Não se aplica</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="os-table" id="os-table">
+                <thead>
+                    <tr>
+                        <th>NR OS</th>
+                        <th>CLIENTE</th>
+                        <th>Previsão de Entrega Peç</th>
+                        <th>Previsão de Entrega do Item</th>
+                        <th>Usinagem</th>
+                        <th>Brunimento</th>
+                        <th>Cromagem</th>
+                        <th>Montagem</th>
+                        <th>Teste</th>
+                        <th>Pintura</th>
+                        <th>Responsável</th>
+                    </tr>
+                </thead>
+                <tbody id="os-tbody">
+                    <tr>
+                        <td colspan="11" style="text-align: center; padding: 40px; color: #64748b; font-style: italic;">
+                            Carregando dados...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="details-section" id="details-section">
+            <h3>Detalhes da OS Selecionada</h3>
+            <table class="details-table" id="details-table">
+                <thead>
+                    <tr>
+                        <th>ATIVIDADE</th>
+                        <th>STATUS</th>
+                        <th>MACROGRUPO</th>
+                        <th>ITEM</th>
+                        <th>CÓD. PLAQ GRAU DE COM</th>
+                        <th>PARTNAME</th>
+                        <th>DECISÃO</th>
+                        <th>JUSTIFIC</th>
+                        <th>CÓD. PRODU SLA</th>
+                        <th>PLANEJADO</th>
+                        <th>OPERADOR</th>
+                        <th>DT E HORA INICIAL</th>
+                        <th>DT E HORA FI</th>
+                    </tr>
+                </thead>
+                <tbody id="details-tbody">
+                    <tr>
+                        <td colspan="13" class="no-selection">Selecione uma OS na tabela acima para ver os detalhes</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="legend-section">
+            <h4>Legenda</h4>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="status-dot finalizado"></span>
+                    <span>Finalizado</span>
+                </div>
+                <div class="legend-item">
+                    <span class="status-dot programado"></span>
+                    <span>Programado</span>
+                </div>
+                <div class="legend-item">
+                    <span class="status-dot aguardando"></span>
+                    <span>Aguardando</span>
+                </div>
+                <div class="legend-item">
+                    <span class="status-dot nao-aplica"></span>
+                    <span>Não se aplica</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let servicosData = [];
+
+        function showLoading() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        function loadData() {
+            showLoading();
+
+            const query = `
+                     SELECT DISTINCT
+                    S.ID,
+                    OS.NUOS,
+                    PAR.NOMEPARC,
+                    S.CODPROD,
+                    PRO.DESCRPROD,
+                    GRU.DESCRGRUPOPROD,
+                    S.STATUS,
+                    S.DTINICIO,
+                    S.DTFINAL,
+                    U.NOMEUSU AS OPERADOR,
+                    PRO.AD_ETAPAOFICINA,
+                    PART.PARTNAME,
+                    DEC.DESCR AS DECISAO,
+                    PRO2.DESCRPROD AS ITEM_DESC
+                FROM AD_SERVICOS S
+                LEFT JOIN AD_CONTROLEOS OS ON OS.ID = S.ID
+                LEFT JOIN TGFPAR PAR ON OS.CODPARC = PAR.CODPARC
+                LEFT JOIN TGFPRO PRO ON PRO.CODPROD = S.CODPROD
+                LEFT JOIN AD_PARTNAME PART ON S.ID = PART.ID AND PART.CODPARTNAME = S.CODPARTNAME
+                LEFT JOIN AD_TIPDECISAO DEC ON DEC.CODDESC = PART.DECISAO
+                LEFT JOIN TGFPRO PRO2 ON PRO2.CODPROD = OS.CODITEM
+                LEFT JOIN TSIUSU U ON U.CODUSU = S.OPERADOR
+                LEFT JOIN TGFGRU GRU ON GRU.CODGRUPOPROD = OS.CODMACROGRP
+                WHERE OS.NUOS IS NOT NULL
+                AND PRO.AD_ETAPAOFICINA IN (300020000,300030000,300040000,300050000,300060000,300070000)
+                AND OS.STATUS IN (4,7)
+                ORDER BY OS.NUOS, S.ID
+            `;
+
+            JX.consultar(query)
+                .then(result => {
+                    console.log("Dados carregados:", result);
+
+                    if (result && result.length > 0) {
+                        servicosData = transformData(result);
+                        console.log(`${servicosData.length} registros transformados com sucesso`);
+                        initDashboard();
+                    } else {
+                        servicosData = [];
+                        const tbody = document.getElementById('os-tbody');
+                        tbody.innerHTML = '<tr><td colspan="11" class="no-selection">Nenhum registro encontrado</td></tr>';
+                    }
+
+                    hideLoading();
+                })
+                .catch(error => {
+                    console.error("Erro ao carregar dados:", error);
+                    const tbody = document.getElementById('os-tbody');
+                    tbody.innerHTML = '<tr><td colspan="11" style="text-align: center; padding: 40px; color: #ef4444;">Erro ao carregar dados. Verifique a conexão.</td></tr>';
+                    hideLoading();
+                });
+        }
+
+        function transformData(rawData) {
+            const etapaMapping = {
+                '300020000': 'Usinagem',
+                '300030000': 'Brunimento',
+                '300040000': 'Cromagem',
+                '300050000': 'Montagem',
+                '300060000': 'Teste',
+                '300070000': 'Pintura'
+            };
+
+            const statusMapping = {
+                'A': 'Aprovado',
+                'P': 'Programado',
+                'F': 'Finalizado'
+            };
+
+            return rawData.map(row => {
+                const etapa = etapaMapping[row.AD_ETAPAOFICINA] || 'Outro';
+                const status = statusMapping[row.STATUS] || 'Aguardando';
+
+                return {
+                    nrOS: row.NUOS || '',
+                    cliente: row.NOMEPARC || '',
+                    previsaoEntrega: row.DTINICIO ? formatDate(row.DTINICIO) : '',
+                    etapa: etapa,
+                    status: status,
+                    atividade: row.DESCRPROD || '',
+                    macrogrupo: row.DESCRGRUPOPROD || '',
+                    item: row.CODPROD || '',
+                    codPlaq: row.ID || '',
+                    partname: row.PARTNAME || '',
+                    decisao: row.DECISAO || '',
+                    justific: '',
+                    codProdu: row.CODPROD || '',
+                    planejado: row.DTINICIO ? formatDate(row.DTINICIO) : '',
+                    operador: row.OPERADOR || '',
+                    dtHoraInicial: row.DTINICIO ? formatDateTime(row.DTINICIO) : '',
+                    dtHoraFinal: row.DTFINAL ? formatDateTime(row.DTFINAL) : '',
+                    responsavel: row.OPERADOR ? row.OPERADOR.split(' ')[0] : '',
+                    oficina: 'oficina-1'
+                };
+            });
+        }
+
+        function formatDate(str) {
+             if(!str) return '';
+            try {
+                const s = str.replace(/[^0-9]/g, '');
+                if(s.length >= 12) {
+                const day = s.substring(0, 2);
+                const month = s.substring(2, 4);
+                const year = s.substring(4, 8);
+                const hour = s.substring(8, 10);
+                const minute = s.substring(10, 12);
+                return `${day}/${month}/${year} ${hour}:${minute}`;
+                }
+                return s;
+            } catch(e) {
+                return str;
+            }
+        }
+
+        function formatDateTime(str) {
+            if(!str) return '';
+            try {
+                const s = str.replace(/[^0-9]/g, '');
+                if(s.length >= 12) {
+                const day = s.substring(0, 2);
+                const month = s.substring(2, 4);
+                const year = s.substring(4, 8);
+                const hour = s.substring(8, 10);
+                const minute = s.substring(10, 12);
+                return `${day}/${month}/${year} ${hour}:${minute}`;
+                }
+                return s;
+            } catch(e) {
+                return str;
+            }
+        }
+
+        function initDashboard() {
+            if (servicosData.length > 0) {
+                window.dashboard = new DashboardOS();
+            }
+        }
+
+        class DashboardOS {
+            constructor() {
+                this.servicosData = servicosData;
+                this.groupedData = this.groupByOS();
+                this.filteredData = [...this.groupedData];
+                this.selectedOS = null;
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.renderTable();
+                this.setupFilters();
+            }
+
+            groupByOS() {
+                const grouped = {};
+
+                this.servicosData.forEach(servico => {
+                    if (!grouped[servico.nrOS]) {
+                        grouped[servico.nrOS] = {
+                            nrOS: servico.nrOS,
+                            cliente: servico.cliente,
+                            previsaoEntrega: servico.previsaoEntrega,
+                            oficina: servico.oficina,
+                            servicos: [],
+                            responsaveis: new Set()
+                        };
+                    }
+
+                    grouped[servico.nrOS].servicos.push(servico);
+                    if (servico.responsavel) {
+                        grouped[servico.nrOS].responsaveis.add(servico.responsavel);
+                    }
+                });
+
+                return Object.values(grouped).map(os => {
+                    os.responsavel = Array.from(os.responsaveis).join(', ');
+                    delete os.responsaveis;
+                    return os;
+                });
+            }
+
+            calculateStepStatus(servicos, etapa) {
+                const servicosEtapa = servicos.filter(s => s.etapa === etapa);
+
+                if (servicosEtapa.length === 0) {
+                    return 'nao-aplica';
+                }
+
+                const statuses = servicosEtapa.map(s => s.status);
+
+                if (statuses.every(status => status === 'Finalizado')) {
+                    return 'finalizado';
+                }
+
+                if (statuses.some(status => status === 'Programado' || status === 'Aguardando')) {
+                    return 'programado';
+                }
+
+                return 'aguardando';
+            }
+
+            bindEvents() {
+                const filtroOficina = document.getElementById('filtro-oficina');
+                filtroOficina.addEventListener('change', () => this.applyFilters());
+
+                const statusFilters = document.querySelectorAll('.status-filter input[type="checkbox"]');
+                statusFilters.forEach(filter => {
+                    filter.addEventListener('change', () => this.applyFilters());
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('tbody tr')) {
+                        const row = e.target.closest('tbody tr');
+                        const osNumber = row.dataset.osNumber;
+                        if (osNumber) {
+                            this.selectOS(osNumber, row);
+                        }
+                    }
+                });
+            }
+
+            setupFilters() {
+                this.applyFilters();
+            }
+
+            applyFilters() {
+                const oficina = document.getElementById('filtro-oficina').value;
+                const activeStatuses = [];
+
+                document.querySelectorAll('.status-filter input[type="checkbox"]:checked').forEach(checkbox => {
+                    activeStatuses.push(checkbox.id);
+                });
+
+                this.filteredData = this.groupedData.filter(os => {
+                    if (oficina && os.oficina !== oficina) {
+                        return false;
+                    }
+
+                    const etapas = ['Usinagem', 'Brunimento', 'Cromagem', 'Montagem', 'Teste', 'Pintura'];
+                    const osStatuses = etapas.map(etapa => this.calculateStepStatus(os.servicos, etapa));
+
+                    const statusMap = {
+                        'finalizado': 'finalizado',
+                        'programado': 'programado',
+                        'aguardando': 'aguardando',
+                        'nao-aplica': 'nao-aplica'
+                    };
+
+                    const mappedStatuses = osStatuses.map(status => statusMap[status]);
+                    const hasActiveStatus = mappedStatuses.some(status => activeStatuses.includes(status));
+                    return hasActiveStatus;
+                });
+
+                this.renderTable();
+            }
+
+            renderTable() {
+                const tbody = document.getElementById('os-tbody');
+                tbody.innerHTML = '';
+
+                if (this.filteredData.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="11" style="text-align: center; padding: 40px; color: #64748b; font-style: italic;">
+                                Nenhuma OS encontrada com os filtros aplicados
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                this.filteredData.forEach(os => {
+                    const row = document.createElement('tr');
+                    row.dataset.osNumber = os.nrOS;
+
+                    const usinagemStatus = this.calculateStepStatus(os.servicos, 'Usinagem');
+                    const brunimentoStatus = this.calculateStepStatus(os.servicos, 'Brunimento');
+                    const cromagemStatus = this.calculateStepStatus(os.servicos, 'Cromagem');
+                    const montagemStatus = this.calculateStepStatus(os.servicos, 'Montagem');
+                    const testeStatus = this.calculateStepStatus(os.servicos, 'Teste');
+                    const pinturaStatus = this.calculateStepStatus(os.servicos, 'Pintura');
+
+                    row.innerHTML = `
+                        <td><strong>${os.nrOS}</strong></td>
+                        <td>${os.cliente}</td>
+                        <td>${os.previsaoEntrega}</td>
+                        <td>${os.previsaoEntrega}</td>
+                        <td>${this.renderStatusCell(usinagemStatus)}</td>
+                        <td>${this.renderStatusCell(brunimentoStatus)}</td>
+                        <td>${this.renderStatusCell(cromagemStatus)}</td>
+                        <td>${this.renderStatusCell(montagemStatus)}</td>
+                        <td>${this.renderStatusCell(testeStatus)}</td>
+                        <td>${this.renderStatusCell(pinturaStatus)}</td>
+                        <td>${os.responsavel}</td>
+                    `;
+
+                    tbody.appendChild(row);
+                });
+            }
+
+            renderStatusCell(status) {
+                return `
+                    <div class="status-cell">
+                        <span class="status-dot ${status}"></span>
+                    </div>
+                `;
+            }
+
+            selectOS(osNumber, rowElement) {
+                document.querySelectorAll('tbody tr').forEach(row => {
+                    row.classList.remove('selected');
+                });
+
+                rowElement.classList.add('selected');
+                this.selectedOS = osNumber;
+
+                this.renderDetails(osNumber);
+            }
+
+            renderDetails(osNumber) {
+                const detailsBody = document.getElementById('details-tbody');
+                const os = this.groupedData.find(o => o.nrOS === osNumber);
+
+                if (!os || !os.servicos || os.servicos.length === 0) {
+                    detailsBody.innerHTML = `
+                        <tr>
+                            <td colspan="13" class="no-selection">
+                                Nenhum detalhe encontrado para a OS ${osNumber}
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                detailsBody.innerHTML = '';
+
+                os.servicos.forEach(servico => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${servico.atividade}</td>
+                        <td><strong>${servico.status}</strong></td>
+                        <td>${servico.macrogrupo}</td>
+                        <td>${servico.item}</td>
+                        <td>${servico.codPlaq}</td>
+                        <td>${servico.partname}</td>
+                        <td>${servico.decisao}</td>
+                        <td>${servico.justific}</td>
+                        <td>${servico.codProdu}</td>
+                        <td>${servico.planejado}</td>
+                        <td>${servico.operador}</td>
+                        <td>${servico.dtHoraInicial}</td>
+                        <td>${servico.dtHoraFinal}</td>
+                    `;
+                    detailsBody.appendChild(row);
+                });
+            }
+        }
+
+        (async function init() {
+            loadData();
+        })();
+    </script>
+</body>
+</html>
